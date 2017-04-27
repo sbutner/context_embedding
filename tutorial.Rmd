@@ -1,7 +1,8 @@
 ---
-title: "R Notebook"
+title: "Contextual Word Embeddings"
 output: html_notebook
 ---
+
 ```{r}
 library(dplyr)
 library(tidytext)
@@ -20,7 +21,7 @@ original <- austen_books() %>%
 
 original
 ```
-
+#Tokenize with Tidytext
 Now use tidytext magic to tokenize
 ```{r}
 tidy <- original %>%
