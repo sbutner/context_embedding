@@ -1,9 +1,11 @@
 ---
 title: "Contextual Word Embeddings"
-output: html_notebook
+output:
+  html_document: default
+  html_notebook: default
 ---
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 library(dplyr)
 library(tidytext)
 library(wordVectors)
@@ -48,7 +50,7 @@ tidy %>%
 
 #Vectorize
 Run word2vec, passing in the txt file we just made.
-```{r}
+```{r, message=FALSE, warning=FALSE}
 vectors <- train_word2vec("words.txt")
 
 ```
@@ -82,6 +84,7 @@ plot_df <- plot_df %>%
 
 ggplot(subset(plot_df, group != "none"), aes(x,y, color=group)) +
   geom_point() +
+  ggtitle("Time in 6 different \nAusten Books")+
   theme_minimal()
 ```
 
