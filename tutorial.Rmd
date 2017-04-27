@@ -1,0 +1,83 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+```{r}
+library(dplyr)
+library(tidytext)
+library(wordVectors)
+library(janeaustenr)
+library(ggplot2)
+```
+
+For an easy example I'll use the Austen books corpus in the ```janeaustenr``` package.
+
+```{r}
+original <- austen_books() %>%
+  group_by(book) %>%
+  mutate(line = row_number()) %>%
+  ungroup()
+
+original
+```
+
+Now use tidytext magic to tokenize
+```{r}
+tidy <- original %>%
+  unnest_tokens(word, text)
+
+tidy
+```
+
+Now let's make a tag for each book and prepend to a select set of words. For simplicity, let's go ahead and use the factor level.
+```{r}
+tidy <- tidy %>%
+  mutate(word = ifelse(word == "time", paste0(as.numeric(book), '#', word),word))
+```
+And now prepare for word vectorizing
+```{r}
+tidy %>%
+  select(word) %>%
+  unlist() %>%
+  paste(collapse = " ") %>%
+  writeChar("words.txt")
+```
+Load and vectorize
+```{r}
+vectors <- train_word2vec("words.txt")
+
+```
+and check it out
+```{r}
+nearest_to(vectors, vectors["1#time"])
+```
+compared with 
+```{r}
+nearest_to(vectors, vectors["2#time"])
+```
+let's get fancy and try to plot it out.
+
+```{r}
+library(Rtsne)
+
+vec <- vectors@.Data
+plottable_vectors <- Rtsne(vec, dims = 2, theta = 0.8, perplexity = 30, verbose = TRUE)
+```
+```{r}
+plot_df <- data_frame(x = plottable_vectors$Y[,1],
+                      y = plottable_vectors$Y[,2],
+                      labels = row.names(vec))
+
+sp <- stringr::str_split_fixed(plot_df$labels, "#", 2)
+plot_df <- cbind(plot_df, sp)
+colnames(plot_df)[4] <- 'group'
+colnames(plot_df)[5] <- 'excess'
+plot_df <- plot_df %>%
+  mutate(group = ifelse(excess=="", "none",as.character(group)))
+
+ggplot(subset(plot_df, group != "none"), aes(x,y, color=group)) +
+  geom_point() +
+  theme_minimal()
+```
+
+Success!
